@@ -21,5 +21,5 @@ func New(path string) Store {
 }
 
 func (s Store) LastUpdated() time.Time {
-	return time.Now()
+	return time.Now().AddDate(0, 0, -10)
 }
