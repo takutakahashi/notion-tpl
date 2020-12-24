@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/kjk/notionapi"
+	"github.com/takutakahashi/notion-tpl/pkg/store"
 	"github.com/urfave/cli"
 )
 
@@ -37,22 +38,26 @@ func action(c *cli.Context) error {
 	client := &notionapi.Client{
 		AuthToken: os.Getenv("NOTION_TOKEN"),
 	}
-	tableID := c.String("table-id")
+	tableID := c.String("table-id") // p, err := client.DownloadPage(row.Page.ID)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Printf("%s", tomarkdown.ToMarkdown(p))
 	page, err := client.DownloadPage(tableID)
 	if err != nil {
 		log.Fatalf("DownloadPage() failed with %s\n", err)
 	}
 	tb := page.TableViews[0]
-	permMap := map[string]time.Time{}
+	lastUpdate := store.LastUpdated()
+	permMap := map[*notionapi.TableRow]time.Time{}
 	for _, row := range tb.Rows {
-		permMap[row.Columns[1][0].Text] = row.Page.LastEditedOn()
+		permMap[row] = row.Page.LastEditedOn()
 		fmt.Println(row.Page.LastEditedOn())
-		// p, err := client.DownloadPage(row.Page.ID)
-		// if err != nil {
-		// 	return err
-		// }
-		// fmt.Printf("%s", tomarkdown.ToMarkdown(p))
 	}
-	fmt.Printf("%s", permMap)
+	for row, v := range permMap {
+		if lastUpdate.Before(v) {
+			fmt.Println(row.Page.GetTitle())
+		}
+	}
 	return nil
 }
