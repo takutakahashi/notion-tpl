@@ -1,13 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"time"
 
 	"github.com/kjk/notionapi"
-	"github.com/takutakahashi/notion-tpl/pkg/store"
+	"github.com/takutakahashi/notion-tpl/pkg/worker"
 	"github.com/urfave/cli"
 )
 
@@ -43,21 +42,14 @@ func action(c *cli.Context) error {
 	// 	return err
 	// }
 	// fmt.Printf("%s", tomarkdown.ToMarkdown(p))
+
 	page, err := client.DownloadPage(tableID)
 	if err != nil {
 		log.Fatalf("DownloadPage() failed with %s\n", err)
 	}
 	tb := page.TableViews[0]
-	lastUpdate := store.LastUpdated()
-	permMap := map[*notionapi.TableRow]time.Time{}
-	for _, row := range tb.Rows {
-		permMap[row] = row.Page.LastEditedOn()
-		fmt.Println(row.Page.LastEditedOn())
-	}
-	for row, v := range permMap {
-		if lastUpdate.Before(v) {
-			fmt.Println(row.Page.GetTitle())
-		}
-	}
+	w := worker.New(tb)
+	w.Start()
+
 	return nil
 }

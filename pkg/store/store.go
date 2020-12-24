@@ -4,6 +4,14 @@ import (
 	"time"
 )
 
-func LastUpdated() time.Time {
+type Store struct {
+	path string
+}
+
+func New() Store {
+	return Store{}
+}
+
+func (s Store) LastUpdated() time.Time {
 	return time.Now()
 }
