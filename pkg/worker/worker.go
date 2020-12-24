@@ -15,7 +15,7 @@ type Worker struct {
 }
 
 func New(tb *notionapi.TableView) Worker {
-	store := store.New()
+	store := store.New(".")
 	return Worker{
 		store:   store,
 		permMap: map[*notionapi.TableRow]time.Time{},
