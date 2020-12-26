@@ -19,6 +19,18 @@ func main() {
 			Name:  "table-id",
 			Usage: "table view id. ex: a6b2dab9302744a2bcc4e00c3b512ae6",
 		},
+		cli.StringFlag{
+			Name:  "token",
+			Usage: "notion_v2 token",
+		},
+		cli.StringFlag{
+			Name:  "export-path",
+			Usage: "export path",
+		},
+		cli.StringFlag{
+			Name:  "template",
+			Usage: "template file path",
+		},
 	}
 	app.Action = action
 	err := app.Run(os.Args)
@@ -29,8 +41,9 @@ func main() {
 
 func action(c *cli.Context) error {
 	tableID := c.String("table-id")
-	token := os.Getenv("NOTION_TOKEN")
-
-	w := worker.New(token, tableID)
+	token := c.String("token")
+	exportPath := c.String("export-path")
+	tmplPath := c.String("template")
+	w := worker.New(token, tableID, exportPath, tmplPath)
 	return w.Start()
 }

@@ -1,19 +1,21 @@
 package worker
 
 import (
-	"fmt"
-
 	"github.com/takutakahashi/notion-tpl/pkg/notion"
 )
 
 type Worker struct {
-	Client notion.Client
+	Client     notion.Client
+	exportPath string
+	tmplPath   string
 }
 
-func New(token, tbid string) Worker {
+func New(token, tbid, exportPath, tmplPath string) Worker {
 	cli := notion.NewClient(token, tbid, ".")
 	return Worker{
-		Client: cli,
+		Client:     cli,
+		exportPath: exportPath,
+		tmplPath:   tmplPath,
 	}
 }
 
@@ -23,8 +25,7 @@ func (w Worker) Start() error {
 		return err
 	}
 	for _, p := range pages {
-		fmt.Println(p.Released)
-		err = p.ExportHugo()
+		err = p.Export(w.tmplPath, w.exportPath)
 		if err != nil {
 			return err
 		}

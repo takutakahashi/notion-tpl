@@ -33,20 +33,15 @@ func New(page *notionapi.Page, permURI string, released bool) Body {
 	}
 }
 
-func (p Body) ExportHugo() error {
-	path := "./src/hugo.md.tpl"
-	tmpl, err := template.New(filepath.Base(path)).Funcs(sprig.TxtFuncMap()).ParseFiles(path)
+func (p Body) Export(tmplPath, exportPath string) error {
+	tmpl, err := template.New(filepath.Base(tmplPath)).Funcs(sprig.TxtFuncMap()).ParseFiles(tmplPath)
 	if err != nil {
 		return err
 	}
-	result, err := os.Create(p.GetPathToExport())
+	result, err := os.Create(fmt.Sprintf("%s/%s.md", exportPath, p.permURI))
 	if err != nil {
 		return err
 	}
 	defer result.Close()
 	return tmpl.Execute(result, p)
-}
-
-func (p Body) GetPathToExport() string {
-	return fmt.Sprintf("./content/posts/%s.md", p.permURI)
 }

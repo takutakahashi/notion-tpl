@@ -1,7 +1,6 @@
 package notion
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -45,7 +44,6 @@ func (c Client) UpdatedPages() ([]body.Body, error) {
 	}
 	for row, v := range c.permMap {
 		if v.After(lastUpdated) {
-			fmt.Println(row.Columns[2][0].Text)
 			released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
 			page, err := c.c.DownloadPage(row.Page.ID)
 			if err != nil {
