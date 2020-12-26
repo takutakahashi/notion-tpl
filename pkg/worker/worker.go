@@ -11,7 +11,7 @@ type Worker struct {
 }
 
 func New(token, tbid, exportPath, tmplPath string) Worker {
-	cli := notion.NewClient(token, tbid, ".")
+	cli := notion.NewClient(token, tbid, exportPath)
 	return Worker{
 		Client:     cli,
 		exportPath: exportPath,
