@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"text/template"
 	"time"
 
@@ -23,9 +24,11 @@ type Body struct {
 }
 
 func New(page *notionapi.Page, permURI string, released bool) Body {
+	content := fmt.Sprintf("%s", tomarkdown.ToMarkdown(page))
+	title := page.Root().Title
 	return Body{
-		Content:   fmt.Sprintf("%s", tomarkdown.ToMarkdown(page)),
-		Title:     page.Root().Title,
+		Content:   strings.TrimLeft(content, fmt.Sprintf("# %s\n", title)),
+		Title:     title,
 		permURI:   permURI,
 		CreatedAt: page.Root().CreatedOn(),
 		UpdatedAt: page.Root().LastEditedOn(),
