@@ -31,6 +31,10 @@ func main() {
 			Name:  "template",
 			Usage: "template file path",
 		},
+		cli.StringFlag{
+			Name:  "cmd",
+			Usage: "cmd that will be executed after update",
+		},
 	}
 	app.Action = action
 	err := app.Run(os.Args)
@@ -44,6 +48,7 @@ func action(c *cli.Context) error {
 	token := c.String("token")
 	exportPath := c.String("export-path")
 	tmplPath := c.String("template")
-	w := worker.New(token, tableID, exportPath, tmplPath)
+  cmd := c.String("cmd")
+	w := worker.New(token, tableID, exportPath, tmplPath, cmd)
 	return w.Start()
 }
