@@ -37,21 +37,19 @@ func NewClient(token, tbid, storePath string) Client {
 func (c Client) UpdatedPages() ([]body.Body, error) {
 	// TODO: use query
 	lastUpdated := c.store.LastUpdated()
+	defer c.store.RefreshUpdated()
 	pages := []body.Body{}
 	for _, row := range c.Table.Rows {
 		c.permMap[row] = row.Page.LastEditedOn()
 	}
 	for row, v := range c.permMap {
-		released := len(row.Columns[2]) != 0
-		if !released {
-			continue
-		}
 		if v.After(lastUpdated) {
+			released := len(row.Columns[2]) != 0
 			page, err := c.c.DownloadPage(row.Page.ID)
 			if err != nil {
 				return nil, err
 			}
-			pages = append(pages, body.New(page, row.Columns[1][0].Text))
+			pages = append(pages, body.New(page, row.Columns[1][0].Text, released))
 		}
 
 	}

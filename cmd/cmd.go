@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"os"
 
 	"github.com/takutakahashi/notion-tpl/pkg/worker"
@@ -20,7 +21,10 @@ func main() {
 		},
 	}
 	app.Action = action
-	app.Run(os.Args)
+	err := app.Run(os.Args)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func action(c *cli.Context) error {
@@ -28,7 +32,5 @@ func action(c *cli.Context) error {
 	token := os.Getenv("NOTION_TOKEN")
 
 	w := worker.New(token, tableID)
-	w.Start()
-
-	return nil
+	return w.Start()
 }

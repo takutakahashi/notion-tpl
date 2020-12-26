@@ -20,6 +20,11 @@ func (w Worker) Start() error {
 	if err != nil {
 		return err
 	}
-	_ = pages
+	for _, p := range pages {
+		err = p.ExportHugo()
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

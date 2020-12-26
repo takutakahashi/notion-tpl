@@ -23,3 +23,7 @@ func New(path string) Store {
 func (s Store) LastUpdated() time.Time {
 	return time.Now().AddDate(0, 0, -10)
 }
+
+func (s Store) RefreshUpdated() error {
+	return nil
+}
