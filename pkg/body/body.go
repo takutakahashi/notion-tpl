@@ -29,6 +29,7 @@ func New(page *notionapi.Page, permURI string, released bool) Body {
 		permURI:   permURI,
 		CreatedAt: page.Root().CreatedOn(),
 		UpdatedAt: page.Root().LastEditedOn(),
+		Released:  released,
 	}
 }
 

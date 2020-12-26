@@ -1,6 +1,8 @@
 package worker
 
 import (
+	"fmt"
+
 	"github.com/takutakahashi/notion-tpl/pkg/notion"
 )
 
@@ -21,6 +23,7 @@ func (w Worker) Start() error {
 		return err
 	}
 	for _, p := range pages {
+		fmt.Println(p.Released)
 		err = p.ExportHugo()
 		if err != nil {
 			return err
