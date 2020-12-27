@@ -2,7 +2,9 @@ package worker
 
 import (
 	"os/exec"
+	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/takutakahashi/notion-tpl/pkg/notion"
 )
 
@@ -24,16 +26,26 @@ func New(token, tbid, exportPath, tmplPath, cmd string) Worker {
 }
 
 func (w Worker) Start() error {
+	for {
+		if err := w.execute(); err != nil {
+			logrus.Error(err)
+		}
+		time.Sleep(1 * time.Minute)
+	}
+}
+
+func (w Worker) execute() error {
 	pages, err := w.Client.UpdatedPages()
 	if err != nil {
 		return err
 	}
 	for _, p := range pages {
+
 		err = p.Export(w.tmplPath, w.exportPath)
 		if err != nil {
 			return err
 		}
+		logrus.Info("Updated.", "post=", p.Title)
 	}
-	exec.Command(w.Cmd).Run()
-	return nil
+	return exec.Command(w.Cmd).Run()
 }

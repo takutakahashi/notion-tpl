@@ -1,7 +1,6 @@
 package notion
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"time"
@@ -12,7 +11,7 @@ import (
 
 type Client struct {
 	c          *notionapi.Client
-	Table      *notionapi.TableView
+	TableID    string
 	permMap    map[*notionapi.TableRow]time.Time
 	exportPath string
 }
@@ -21,16 +20,12 @@ func NewClient(token, tbid, exportPath string) Client {
 	client := &notionapi.Client{
 		AuthToken: token,
 	}
-	page, err := client.DownloadPage(tbid)
-	if err != nil {
-		log.Fatalf("DownloadPage() failed with %s\n", err)
-	}
-	tb := page.TableViews[0]
+
 	return Client{
 		c:          client,
 		exportPath: exportPath,
 		permMap:    map[*notionapi.TableRow]time.Time{},
-		Table:      tb,
+		TableID:    tbid,
 	}
 }
 
@@ -40,14 +35,14 @@ func (c Client) UpdatedPages() ([]body.Body, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(lastUpdated)
 	pages := []body.Body{}
-	for _, row := range c.Table.Rows {
-		c.permMap[row] = row.Page.LastEditedOn()
+	page, err := c.c.DownloadPage(c.TableID)
+	tb := page.TableViews[0]
+	if err != nil {
+		log.Fatalf("DownloadPage() failed with %s\n", err)
 	}
-	for row, v := range c.permMap {
-		fmt.Println(v)
-		if v.After(lastUpdated) {
+	for _, row := range tb.Rows {
+		if row.Page.LastEditedOn().After(lastUpdated) {
 			released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
 			page, err := c.c.DownloadPage(row.Page.ID)
 			if err != nil {
