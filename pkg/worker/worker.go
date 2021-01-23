@@ -2,7 +2,6 @@ package worker
 
 import (
 	"os/exec"
-	"time"
 
 	"github.com/sirupsen/logrus"
 	"github.com/takutakahashi/notion-tpl/pkg/notion"
@@ -26,12 +25,7 @@ func New(token, tbid, exportPath, tmplPath, cmd string) Worker {
 }
 
 func (w Worker) Start() error {
-	for {
-		if err := w.execute(); err != nil {
-			logrus.Error(err)
-		}
-		time.Sleep(1 * time.Minute)
-	}
+	return w.execute()
 }
 
 func (w Worker) execute() error {
