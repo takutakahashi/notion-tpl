@@ -15,8 +15,8 @@ type Worker struct {
 	Cmd        string
 }
 
-func New(token, tbid, exportPath, tmplPath, cmd string) Worker {
-	cli := notion.NewClient(token, tbid, exportPath)
+func New(token, tbid, exportPath, tmplPath, imagePath, cmd string) Worker {
+	cli := notion.NewClient(token, tbid, exportPath, imagePath)
 	return Worker{
 		Client:     cli,
 		exportPath: exportPath,
@@ -39,13 +39,13 @@ func (w Worker) execute() error {
 	if err != nil {
 		return err
 	}
-	for _, p := range pages {
-
-		err = p.Export(w.tmplPath, w.exportPath)
+	for page, body := range pages {
+		err = w.Client.UploadImage(page)
+		err = body.Export(w.tmplPath, w.exportPath)
 		if err != nil {
 			return err
 		}
-		logrus.Info("Updated.", "post=", p.Title)
+		logrus.Info("Updated.", "post=", body.Title)
 	}
 	return exec.Command(w.Cmd).Run()
 }
