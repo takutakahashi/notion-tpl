@@ -28,6 +28,10 @@ func main() {
 			Usage: "export path",
 		},
 		cli.StringFlag{
+			Name:  "image-path",
+			Usage: "image path",
+		},
+		cli.StringFlag{
 			Name:  "template",
 			Usage: "template file path",
 		},
@@ -48,7 +52,8 @@ func action(c *cli.Context) error {
 	token := c.String("token")
 	exportPath := c.String("export-path")
 	tmplPath := c.String("template")
-  cmd := c.String("cmd")
-	w := worker.New(token, tableID, exportPath, tmplPath, cmd)
+	imagePath := c.String("image-path")
+	cmd := c.String("cmd")
+	w := worker.New(token, tableID, exportPath, tmplPath, imagePath, cmd)
 	return w.Start()
 }
