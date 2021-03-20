@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -95,7 +96,11 @@ func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
 		fileName = parts[0]
 		ext = "." + parts[1]
 	}
-	return ioutil.WriteFile(fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext), resp.Data, 0644)
+	file := fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext)
+	if _, err := os.Stat(file); err != nil {
+		return ioutil.WriteFile(fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext), resp.Data, 0644)
+	}
+	return nil
 }
 
 func (c Client) LastUpdated() (time.Time, error) {
