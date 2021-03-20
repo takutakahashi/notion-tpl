@@ -1,6 +1,7 @@
 package notion
 
 import (
+	"errors"
 	"io/ioutil"
 	"log"
 	"time"
@@ -37,10 +38,14 @@ func (c Client) UpdatedPages() ([]body.Body, error) {
 	}
 	pages := []body.Body{}
 	page, err := c.c.DownloadPage(c.TableID)
-	tb := page.TableViews[0]
 	if err != nil {
 		log.Fatalf("DownloadPage() failed with %s\n", err)
+		return nil, err
 	}
+	if page == nil || len(page.TableViews) == 0 {
+		return nil, errors.New("page was wrong data")
+	}
+	tb := page.TableViews[0]
 	for _, row := range tb.Rows {
 		if row.Page.LastEditedOn().After(lastUpdated) {
 			released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
