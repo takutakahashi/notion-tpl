@@ -36,6 +36,7 @@ func (w Worker) Start() error {
 
 func (w Worker) execute() error {
 	pages, err := w.Client.UpdatedPages()
+	logrus.Debug(pages)
 	if err != nil {
 		return err
 	}
