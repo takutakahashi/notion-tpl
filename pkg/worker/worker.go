@@ -25,12 +25,16 @@ func New(token, tbid, exportPath, tmplPath, imagePath, cmd string) Worker {
 	}
 }
 
-func (w Worker) Start() error {
-	for {
-		if err := w.execute(); err != nil {
-			logrus.Error(err)
+func (w Worker) Start(once bool) error {
+	if once {
+		return w.execute()
+	} else {
+		for {
+			if err := w.execute(); err != nil {
+				logrus.Error(err)
+			}
+			time.Sleep(1 * time.Minute)
 		}
-		time.Sleep(1 * time.Minute)
 	}
 }
 

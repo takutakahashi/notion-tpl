@@ -39,6 +39,10 @@ func main() {
 			Name:  "cmd",
 			Usage: "cmd that will be executed after update",
 		},
+		cli.BoolFlag{
+			Name:  "once",
+			Usage: "execute once",
+		},
 	}
 	app.Action = action
 	err := app.Run(os.Args)
@@ -54,6 +58,7 @@ func action(c *cli.Context) error {
 	tmplPath := c.String("template")
 	imagePath := c.String("image-path")
 	cmd := c.String("cmd")
+	once := c.Bool("once")
 	w := worker.New(token, tableID, exportPath, tmplPath, imagePath, cmd)
-	return w.Start()
+	return w.Start(once)
 }

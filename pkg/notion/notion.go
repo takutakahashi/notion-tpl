@@ -36,11 +36,6 @@ func NewClient(token, tbid, exportPath, imagePath string) Client {
 }
 
 func (c Client) UpdatedPages() (map[*notionapi.Page]body.Body, error) {
-	// TODO: use query
-	lastUpdated, err := c.LastUpdated()
-	if err != nil {
-		return nil, err
-	}
 	pages := map[*notionapi.Page]body.Body{}
 	page, err := c.c.DownloadPage(c.TableID)
 	if err != nil {
@@ -52,15 +47,12 @@ func (c Client) UpdatedPages() (map[*notionapi.Page]body.Body, error) {
 	}
 	tb := page.TableViews[0]
 	for _, row := range tb.Rows {
-		if row.Page.LastEditedOn().After(lastUpdated) {
-			released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
-			page, err := c.c.DownloadPage(row.Page.ID)
-			if err != nil {
-				return nil, err
-			}
-			pages[page] = body.New(page, row.Columns[1][0].Text, released)
+		released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
+		page, err := c.c.DownloadPage(row.Page.ID)
+		if err != nil {
+			return nil, err
 		}
-
+		pages[page] = body.New(page, row.Columns[1][0].Text, released)
 	}
 	return pages, nil
 }
