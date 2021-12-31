@@ -1,4 +1,4 @@
-FROM golang as builder
+FROM golang:1.17 as builder
 
 WORKDIR /src
 COPY go.mod /src/
