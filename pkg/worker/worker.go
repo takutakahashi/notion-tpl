@@ -41,7 +41,6 @@ func (w Worker) Start(once bool) error {
 
 func (w Worker) execute() error {
 	pages, err := w.Client.UpdatedPages()
-	logrus.Debug(pages)
 	if err != nil {
 		return errors.Wrapf(err, "failed to download")
 	}

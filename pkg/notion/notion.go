@@ -48,6 +48,7 @@ func (c Client) UpdatedPages() (map[*notionapi.Page]body.Body, error) {
 	}
 	tb := page.TableViews[0]
 	for _, row := range tb.Rows {
+		logrus.Info(row)
 		released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
 		page, err := c.c.DownloadPage(row.Page.ID)
 		if err != nil {
