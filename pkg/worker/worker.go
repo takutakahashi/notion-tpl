@@ -4,6 +4,7 @@ import (
 	"os/exec"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/takutakahashi/notion-tpl/pkg/notion"
 )
@@ -42,7 +43,7 @@ func (w Worker) execute() error {
 	pages, err := w.Client.UpdatedPages()
 	logrus.Debug(pages)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to download")
 	}
 	for page, body := range pages {
 		err = w.Client.UploadImage(page)

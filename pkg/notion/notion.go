@@ -1,7 +1,6 @@
 package notion
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -10,6 +9,8 @@ import (
 	"time"
 
 	"github.com/kjk/notionapi"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"github.com/takutakahashi/notion-tpl/pkg/body"
 )
 
@@ -69,7 +70,7 @@ func (c Client) UploadImage(p *notionapi.Page) error {
 }
 
 func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
-	resp, err := c.c.DownloadFile(b.Source, b.ID)
+	resp, err := c.c.DownloadFile(b.Source, b)
 	if err != nil {
 		return err
 	}
@@ -96,10 +97,11 @@ func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
 }
 
 func (c Client) LastUpdated() (time.Time, error) {
+	logrus.Info(c.exportPath)
 	files, err := ioutil.ReadDir(c.exportPath)
 	ret := time.Unix(0, 0)
 	if err != nil {
-		return time.Time{}, err
+		return time.Time{}, errors.Wrapf(err, "failed to ReadDir")
 	}
 	for _, file := range files {
 		mt := file.ModTime()
