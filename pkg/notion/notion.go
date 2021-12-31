@@ -77,7 +77,7 @@ func (c Client) UploadImage(p *notionapi.Page) error {
 }
 
 func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
-	resp, err := c.c.DownloadFile(b.Source, b.ID)
+	resp, err := c.c.DownloadFile(b.Source, b)
 	if err != nil {
 		return err
 	}
