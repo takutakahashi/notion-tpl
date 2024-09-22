@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -25,6 +26,7 @@ type Client struct {
 }
 
 func NewClient(token, tbid, exportPath, imagePath string) Client {
+	logrus.Info(token)
 	client := notionapi.NewClient(notionapi.Token(token))
 	notion2Markdown := notion2markdown.Notion2Markdown{
 		NotionToken: token,
@@ -79,7 +81,7 @@ func (c Client) UploadImage(p *notionapi.Page) error {
 
 func (c Client) uploadImageFromBlock(b notionapi.Block) error {
 	// download image
-	srcURL := b.(notionapi.ImageBlock).Image.GetURL()
+	srcURL := b.(*notionapi.ImageBlock).Image.GetURL()
 	res, err := http.Get(srcURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get image")
@@ -90,19 +92,22 @@ func (c Client) uploadImageFromBlock(b notionapi.Block) error {
 		return errors.Wrapf(err, "failed to read image")
 	}
 
-	// source looks like: "https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e5470cfd-08f0-4fb8-8ec2-452ca1a3f05e/Schermafbeelding2018-06-19om09.52.45.png"
-	var fileID string
-	parts := strings.Split(srcURL, "/")
+	u, err := url.Parse(srcURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse url")
+	}
+	parts := strings.Split(u.Path, "/")
 	fileName := parts[len(parts)-1]
+	fileID := parts[len(parts)-2]
 	parts = strings.SplitN(fileName, ".", 2)
 	ext := ""
 	if len(parts) == 2 {
 		fileName = parts[0]
 		ext = "." + parts[1]
 	}
-	file := fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, ext)
+	file := fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext)
 	if _, err := os.Stat(file); err != nil {
-		return os.WriteFile(fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext), data, 0644)
+		return os.WriteFile(file, data, 0644)
 	}
 	return nil
 }

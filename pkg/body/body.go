@@ -9,6 +9,7 @@ import (
 	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/jomei/notionapi"
 )
 
@@ -28,13 +29,25 @@ func New(ctx context.Context, page *notionapi.Page, content string) Body {
 	for name, prop := range page.Properties {
 		switch name {
 		case "Name":
+			if len(prop.(*notionapi.TitleProperty).Title) == 0 {
+				continue
+			}
 			title = prop.(*notionapi.TitleProperty).Title[0].PlainText
 		case "Tags":
 			continue
 		case "release":
 			released = prop.(*notionapi.CheckboxProperty).Checkbox
 		case "Permanent URL":
-			permURI = prop.(*notionapi.TextProperty).Text[0].PlainText
+			if len(prop.(*notionapi.RichTextProperty).RichText) == 0 {
+				continue
+			}
+			permURI = prop.(*notionapi.RichTextProperty).RichText[0].PlainText
+		case "Permenent URL":
+			if len(prop.(*notionapi.RichTextProperty).RichText) == 0 {
+				continue
+			}
+			permURI = prop.(*notionapi.RichTextProperty).RichText[0].PlainText
+
 		}
 	}
 	return Body{
@@ -48,7 +61,7 @@ func New(ctx context.Context, page *notionapi.Page, content string) Body {
 }
 
 func (p Body) Export(tmplPath, exportPath string) error {
-	tmpl, err := template.New(filepath.Base(tmplPath)).ParseFiles(tmplPath)
+	tmpl, err := template.New(filepath.Base(tmplPath)).Funcs(sprig.FuncMap()).ParseFiles(tmplPath)
 	if err != nil {
 		return err
 	}
