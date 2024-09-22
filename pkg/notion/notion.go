@@ -1,14 +1,17 @@
 package notion
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
-	"log"
+	"io"
+	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/kjk/notionapi"
+	"github.com/jomei/notionapi"
+	"github.com/nisanthchunduru/notion2markdown"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"github.com/takutakahashi/notion-tpl/pkg/body"
@@ -16,74 +19,86 @@ import (
 
 type Client struct {
 	c          *notionapi.Client
+	md         notion2markdown.Notion2Markdown
 	TableID    string
-	permMap    map[*notionapi.TableRow]time.Time
 	exportPath string
 	imagePath  string
 }
 
 func NewClient(token, tbid, exportPath, imagePath string) Client {
-	client := &notionapi.Client{
-		AuthToken: token,
+	logrus.Info(token)
+	client := notionapi.NewClient(notionapi.Token(token))
+	notion2Markdown := notion2markdown.Notion2Markdown{
+		NotionToken: token,
 	}
 
 	return Client{
 		c:          client,
+		md:         notion2Markdown,
 		exportPath: exportPath,
-		permMap:    map[*notionapi.TableRow]time.Time{},
 		TableID:    tbid,
 		imagePath:  imagePath,
 	}
 }
 
 func (c Client) UpdatedPages() (map[*notionapi.Page]body.Body, error) {
+	ctx := context.Background()
 	pages := map[*notionapi.Page]body.Body{}
-	page, err := c.c.DownloadPage(c.TableID)
+	rows, err := c.c.Database.Query(ctx, notionapi.DatabaseID(c.TableID), nil)
 	if err != nil {
-		log.Fatalf("DownloadPage() failed with %s\n", err)
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to query database")
 	}
-	if page == nil || len(page.TableViews) == 0 {
-		return nil, errors.New("page was wrong data")
-	}
-	tb := page.TableViews[0]
-	for _, row := range tb.Rows {
-		logrus.Info(row)
-		released := len(row.Columns[2]) != 0 && row.Columns[2][0].Text == "Yes"
-		page, err := c.c.DownloadPage(row.Page.ID)
+	for _, row := range rows.Results {
+		page, err := c.c.Page.Get(ctx, notionapi.PageID(row.ID))
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrapf(err, "failed to get page")
 		}
-		pages[page] = body.New(page, row.Columns[1][0].Text, released)
+		content, err := c.md.PageToMarkdown(page.ID.String())
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to convert page to markdown")
+		}
+		pages[page] = body.New(ctx, page, content)
 	}
 	return pages, nil
 }
 
 func (c Client) UploadImage(p *notionapi.Page) error {
-	p.ForEachBlock(func(b *notionapi.Block) {
-		if b.Type == notionapi.BlockImage {
-			if err := c.uploadImageFromBlock(b); err != nil {
-				fmt.Println(err)
+	ctx := context.Background()
+	blocks, err := c.c.Block.GetChildren(ctx, notionapi.BlockID(p.ID), nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to get blocks")
+	}
+	for _, block := range blocks.Results {
+		if block.GetType() == notionapi.BlockTypeImage {
+			if err := c.uploadImageFromBlock(block); err != nil {
+				logrus.Error(err)
 			}
 		}
-	})
+	}
 	return nil
+
 }
 
-func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
-	resp, err := c.c.DownloadFile(b.Source, b)
+func (c Client) uploadImageFromBlock(b notionapi.Block) error {
+	// download image
+	srcURL := b.(*notionapi.ImageBlock).Image.GetURL()
+	res, err := http.Get(srcURL)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get image")
 	}
-	fmt.Println(b.Source)
-	source := b.Source // also present in block.Format.DisplaySource
-	// source looks like: "https://s3-us-west-2.amazonaws.com/secure.notion-static.com/e5470cfd-08f0-4fb8-8ec2-452ca1a3f05e/Schermafbeelding2018-06-19om09.52.45.png"
-	var fileID string
-	if len(b.FileIDs) > 0 {
-		fileID = b.FileIDs[0]
+	defer res.Body.Close()
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return errors.Wrapf(err, "failed to read image")
 	}
-	parts := strings.Split(source, "/")
+
+	u, err := url.Parse(srcURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to parse url")
+	}
+	parts := strings.Split(u.Path, "/")
 	fileName := parts[len(parts)-1]
+	fileID := parts[len(parts)-2]
 	parts = strings.SplitN(fileName, ".", 2)
 	ext := ""
 	if len(parts) == 2 {
@@ -92,20 +107,24 @@ func (c Client) uploadImageFromBlock(b *notionapi.Block) error {
 	}
 	file := fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext)
 	if _, err := os.Stat(file); err != nil {
-		return ioutil.WriteFile(fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext), resp.Data, 0644)
+		return os.WriteFile(file, data, 0644)
 	}
 	return nil
 }
 
 func (c Client) LastUpdated() (time.Time, error) {
 	logrus.Info(c.exportPath)
-	files, err := ioutil.ReadDir(c.exportPath)
+	files, err := os.ReadDir(c.exportPath)
 	ret := time.Unix(0, 0)
 	if err != nil {
 		return time.Time{}, errors.Wrapf(err, "failed to ReadDir")
 	}
 	for _, file := range files {
-		mt := file.ModTime()
+		i, err := file.Info()
+		if err != nil {
+			return time.Time{}, errors.Wrapf(err, "failed to get file info")
+		}
+		mt := i.ModTime()
 		if mt.After(ret) {
 			ret = mt
 		}
