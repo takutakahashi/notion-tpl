@@ -1,6 +1,7 @@
 package body
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -8,9 +9,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/Masterminds/sprig"
-	"github.com/kjk/notionapi"
-	"github.com/kjk/notionapi/tomarkdown"
+	"github.com/jomei/notionapi"
 )
 
 type Body struct {
@@ -23,21 +22,33 @@ type Body struct {
 	CreatedAt time.Time
 }
 
-func New(page *notionapi.Page, permURI string, released bool) Body {
-	content := fmt.Sprintf("%s", tomarkdown.ToMarkdown(page))
-	title := page.Root().Title
+func New(ctx context.Context, page *notionapi.Page, content string) Body {
+	var title, permURI string
+	var released bool
+	for name, prop := range page.Properties {
+		switch name {
+		case "Name":
+			title = prop.(*notionapi.TitleProperty).Title[0].PlainText
+		case "Tags":
+			continue
+		case "release":
+			released = prop.(*notionapi.CheckboxProperty).Checkbox
+		case "Permanent URL":
+			permURI = prop.(*notionapi.TextProperty).Text[0].PlainText
+		}
+	}
 	return Body{
 		Content:   strings.TrimLeft(content, fmt.Sprintf("# %s\n", title)),
 		Title:     title,
 		permURI:   permURI,
-		CreatedAt: page.Root().CreatedOn(),
-		UpdatedAt: page.Root().LastEditedOn(),
+		CreatedAt: page.CreatedTime,
+		UpdatedAt: page.LastEditedTime,
 		Released:  released,
 	}
 }
 
 func (p Body) Export(tmplPath, exportPath string) error {
-	tmpl, err := template.New(filepath.Base(tmplPath)).Funcs(sprig.TxtFuncMap()).ParseFiles(tmplPath)
+	tmpl, err := template.New(filepath.Base(tmplPath)).ParseFiles(tmplPath)
 	if err != nil {
 		return err
 	}
