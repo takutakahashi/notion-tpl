@@ -2,10 +2,12 @@ module github.com/takutakahashi/notion-tpl
 
 go 1.23
 
+replace github.com/nisanthchunduru/notion2markdown => github.com/takutakahashi/notion2markdown v0.1.0
+
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0
 	github.com/jomei/notionapi v1.13.2
-	github.com/nisanthchunduru/notion2markdown v0.0.0-20240506221701-b7c8a17ed562
+	github.com/nisanthchunduru/notion2markdown v0.0.0-00010101000000-000000000000
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/urfave/cli v1.22.15
