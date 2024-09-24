@@ -2,7 +2,7 @@ module github.com/takutakahashi/notion-tpl
 
 go 1.23
 
-replace github.com/nisanthchunduru/notion2markdown => github.com/takutakahashi/notion2markdown v0.1.0
+replace github.com/nisanthchunduru/notion2markdown => github.com/takutakahashi/notion2markdown v0.2.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.3.0

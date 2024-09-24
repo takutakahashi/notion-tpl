@@ -54,8 +54,8 @@ github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
 github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
-github.com/takutakahashi/notion2markdown v0.1.0 h1:jYtBgwhHICNOIkwUfPraWyMVnyJ8cBIoMuCBYnNxTLw=
-github.com/takutakahashi/notion2markdown v0.1.0/go.mod h1:lz2gb0m0VbnWVGghE1sPEueR3HXAFAMN9vb1OyWyvUg=
+github.com/takutakahashi/notion2markdown v0.2.0 h1:P87zEKK4sDlw3PZMPI7Cg3iwSvonyKttuLgmTd/95jg=
+github.com/takutakahashi/notion2markdown v0.2.0/go.mod h1:lz2gb0m0VbnWVGghE1sPEueR3HXAFAMN9vb1OyWyvUg=
 github.com/urfave/cli v1.22.15 h1:nuqt+pdC/KqswQKhETJjo7pvn/k4xMUxgW6liI7XpnM=
 github.com/urfave/cli v1.22.15/go.mod h1:wSan1hmo5zeyLGBjRJbzRTNk8gwoYa2B9n4q9dmRIc0=
 golang.org/x/crypto v0.26.0 h1:RrRspgV4mU+YwB4FYnuBoKsUapNIL5cohGAmSH3azsw=
