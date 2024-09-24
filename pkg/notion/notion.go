@@ -82,16 +82,6 @@ func (c Client) UploadImage(p *notionapi.Page) error {
 func (c Client) uploadImageFromBlock(b notionapi.Block) error {
 	// download image
 	srcURL := b.(*notionapi.ImageBlock).Image.GetURL()
-	res, err := http.Get(srcURL)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get image")
-	}
-	defer res.Body.Close()
-	data, err := io.ReadAll(res.Body)
-	if err != nil {
-		return errors.Wrapf(err, "failed to read image")
-	}
-
 	u, err := url.Parse(srcURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse url")
@@ -107,6 +97,15 @@ func (c Client) uploadImageFromBlock(b notionapi.Block) error {
 	}
 	file := fmt.Sprintf("%s/%s-%s%s", c.imagePath, fileName, fileID, ext)
 	if _, err := os.Stat(file); err != nil {
+		res, err := http.Get(srcURL)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get image")
+		}
+		defer res.Body.Close()
+		data, err := io.ReadAll(res.Body)
+		if err != nil {
+			return errors.Wrapf(err, "failed to read image")
+		}
 		return os.WriteFile(file, data, 0644)
 	}
 	return nil
